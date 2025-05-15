@@ -58,3 +58,21 @@ async def retrive_todo(todo_id: int = Path(..., title="조회할 할 일의 ID",
             return {"todo": todo}
         
     return {"message": "일치하는 할 일이 없습니다."}
+
+# 할 일 수정
+@todo_router.put("/{todo_id}")
+async def update_todo(todo_id: int = Path(..., title="수정할 할 일의 ID", ge=1), new_todo: Todo = None) -> dict:
+    for todo in todo_list:
+        if todo.id == todo_id:
+            todo.item = new_todo.item
+            return {"message": "할 일을 수정했습니다."}
+    return {"message": "일치하는 할 일이 없습니다."}
+
+# 할 일 삭제
+@todo_router.delete("/{todo_id}")
+async def delete_todo(todo_id: int = Path(..., title="삭제할 할 일의 ID", ge=1)) -> dict:
+    for todo in todo_list:
+        if todo.id == todo_id:
+            todo_list.remove(todo)
+            return {"message": "할 일을 삭제했습니다."}
+    return {"message": "일치하는 할 일이 없습니다."}
