@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Path, Query
+from model import Todo
+
 
 todo_router = APIRouter(prefix="/todos")
 
@@ -10,13 +12,14 @@ todo_router = APIRouter(prefix="/todos")
 # 테이블 형태의 구조에서 가로로 증가하는 값은 키,밸류 ( 딕셔너리, 리스트 ) - {"이름": 홍길동}
 todo_list = []
 
+# 해당 부분을 model.py로 분리리
 #-----------------------------
 # 할 일 데이터를 저장할 모델 정의
-from pydantic import BaseModel
+# from pydantic import BaseModel
 
-class Todo(BaseModel):
-    id: int
-    item: str
+# class Todo(BaseModel):
+#     id: int
+#     item: str
 #-----------------------------
 
 # 할 일 추가
@@ -33,13 +36,25 @@ async def add_todo(todo: Todo) -> dict:
 async def retrives_todos() -> dict:
     return {"todos": todo_list}
 
+# 할 일 검색
+# 할 일 검색 기능에 item 항목의 값을 필수 입력으로, 최소 2자리, 최대 10자리로 설정
+# http://localhost:8000/todos/search?item=검색어
+@todo_router.get("/search")
+async def search_todos(item: str = Query(..., min_length=2, max_length=10, title="할 일 목록 검색어")) -> dict:
+    result = []
+    for todo in todo_list:
+        if item in todo.item:
+            result.append(todo)
+    return {"todos": result}
+
 # 할 일 상세 조회
 # GET http://localhost:8000/todos/1
 @todo_router.get("/{todo_id}")
-async def retrive_todo(todo_id: int) -> dict:
+async def retrive_todo(todo_id: int = Path(..., title="조회할 할 일의 ID", ge=1)) -> dict:
     # todo_list 변수에는 아래와 같은 형식의 값이 지정
     # [ { id: 1, item: "파이썬 공부"}, {id: 2, item: "FastAPI"}]
     for todo in todo_list:
         if todo.id == todo_id:
             return {"todo": todo}
+        
     return {"message": "일치하는 할 일이 없습니다."}
